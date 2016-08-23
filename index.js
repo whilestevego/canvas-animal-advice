@@ -108,18 +108,18 @@ const keyfy = obj => {
 }
 
 const memoize = func => {
-  if (!(window.memos instanceof Map)) {
-    window.memos = new Map();
+  if (!(window._memos instanceof Map)) {
+    window._memos = new Map();
   }
 
   return arg => {
     const key = `${func.name}#${keyfy(arg)}`;
-    if (window.memos.has(key)) {
-      return window.memos.get(key);
+    if (window._memos.has(key)) {
+      return window._memos.get(key);
     }
 
-    window.memos.set(key, func(arg));
-    return window.memos.get(key);
+    window._memos.set(key, func(arg));
+    return window._memos.get(key);
   }
 }
 
