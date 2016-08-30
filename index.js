@@ -164,6 +164,25 @@ const charWidthRatio = (char, font) => memoGenFontSizeRatios(font).get(char);
 const measureText = (text, font, size) => reduce(text, (total, char) => total + charWidthRatio(char, font) * size, 0)
 const createTextMeasurer = (...args) => text => measureText(text, ...args)
 
+const breakSentenceAt = (sentence, length, font, size) => {
+  if (length.toString() === 'NaN' || typeof length !== 'number') {
+    throw new TypeError('length must be a number');
+  }
+
+  const left = [];
+  const right = sentence.split(' ');
+
+  const ruler = createTextMeasurer(font, size);
+  const wordsRuler = arr => reduce(arr, (total, word) => ruler(word) + total, 0);
+
+
+  while (wordsRuler(left + right[0]) < length && right.length > 0) {
+    left.push(right.shift())
+  }
+
+  return [left.join(' '), right.join(' ')]
+}
+
 // ––––––––––––––––– //
 // Application Logic //
 // ––––––––––––––––– //
