@@ -126,6 +126,19 @@ const memoize = func => {
   }
 }
 
+const pickBy = (obj, fn) => reduce(
+  obj,
+  (newObj, val, key) => {
+    if (fn(val, key) === true) newObj[key] = val;
+    return newObj;
+  },
+  {}
+);
+const pick = (obj, keys) => pickBy(obj, (val, key) => keys.includes(key));
+
+const omitBy = (obj, fn) => pickBy(obj, (...args) => !fn(...args));
+const omit = (obj, keys) => omitBy(obj, (val, key) => keys.includes(key));
+
 const isEmpty = object => Object.keys(object).length === 0;
 
 // –––––––––––––––– //
