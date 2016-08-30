@@ -109,6 +109,7 @@ const keyfy = obj => {
   return map(obj, (val, key) => `${key}:${val}`).sort().join(',');
 }
 
+// TODO: Support multiple arguments
 const memoize = func => {
   if (!(window._memos instanceof Map)) {
     window._memos = new Map();
