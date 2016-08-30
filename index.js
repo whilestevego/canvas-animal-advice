@@ -104,6 +104,8 @@ const reduce = (obj, fn, initialVal = null) => {
 }
 
 const keyfy = obj => {
+  if (typeof obj === 'string') return obj;
+
   return map(obj, (val, key) => `${key}:${val}`).sort().join(',');
 }
 
