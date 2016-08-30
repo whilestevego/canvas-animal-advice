@@ -79,28 +79,28 @@ const toGen = function* (obj) {
   }
 }
 
-const each = function* (obj, cb) {
+const each = function (obj, fn) {
   for (let params of toGen(obj)) {
-    yield cb(...params);
+    fn(...params);
   }
 }
 
-const map = (obj, cb) => {
+const map = (obj, fn) => {
   const out = [];
-  each(obj, (...args) => { out.push(cb(...args)) });
+  each(obj, (...args) => { out.push(fn(...args)) });
 
   return out;
 }
 
-const reduce = (obj, cb, initialVal = null) => {
+const reduce = (obj, fn, initialVal = null) => {
   let objGen = toGen(obj);
-  let prev = initialVal !== null ? initialVal : objGen.next().value[0];
+  let prevVal = initialVal !== null ? initialVal : objGen.next().value[0];
 
   for (let [val, key] of objGen) {
-    prev = cb(prev, val, key, obj);
+    prevVal = fn(prevVal, val, key, obj);
   }
 
-  return prev;
+  return prevVal;
 }
 
 const keyfy = obj => {
