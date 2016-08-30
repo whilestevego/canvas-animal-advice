@@ -159,6 +159,11 @@ const generateFontSizeRatios = font => {
   return reference;
 }
 
+const memoGenFontSizeRatios = memoize(generateFontSizeRatios);
+const charWidthRatio = (char, font) => memoGenFontSizeRatios(font).get(char);
+const measureText = (text, font, size) => reduce(text, (total, char) => total + charWidthRatio(char, font) * size, 0)
+const createTextMeasurer = (...args) => text => measureText(text, ...args)
+
 // ––––––––––––––––– //
 // Application Logic //
 // ––––––––––––––––– //
