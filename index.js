@@ -137,7 +137,7 @@ const generateFontSizeRatios = font => {
 
   ctx.font = `1px ${font}`
 
-  for (let code of range(33,126)) {
+  for (let code of range(0,126)) {
     const char = String.fromCharCode(code);
     reference.set(char, ctx.measureText(char).width);
   }
