@@ -216,7 +216,41 @@ const getImage = src => {
   });
 }
 
-const createWriter = (cvs, img) => text => {
+//TODO: Move text drawing bit to a function
+
+const defaultCaptionOpts = {
+  fontName: 'Impact',
+  fontSize: 60,
+  lineWidth: 5,
+  lineJoin: 'bevel',
+  textAlign: 'center',
+  fillStyle: 'white',
+  textBaseline: 'top'
+}
+
+const drawCaption = (text, opts = defaultCaptionOpts) => {
+  const {fontSize, fontName} = opts;
+  const font = `${fontSize}px ${fontName}`;
+
+  return cvs => {
+    const ctx = cvs.getContext('2d');
+
+    each(
+      Object.assign(omit(opts, ['fontName', 'fontSize']), {font}),
+      (val, key) => { ctx[key] = val; }
+    );
+
+    let [left, right] = breakSentenceAt(text, cvs.width - 20, fontName, fontSize)
+
+    ctx.strokeText(left, cvs.width/2, 10);
+    ctx.fillText(left, cvs.width/2, 10);
+
+    ctx.strokeText(right, cvs.width/2, fontSize + 10);
+    ctx.fillText(right, cvs.width/2, fontSize + 10);
+  }
+}
+
+const createWriter = (cvs, img, font = 'Impact', fontSize = 100) => text => {
   const {naturalHeight, naturalWidth} = img;
 
   ctx = cvs.getContext('2d');
@@ -224,24 +258,7 @@ const createWriter = (cvs, img) => text => {
 
   if (img) ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
 
-  ctx.beginPath();
-  ctx.moveTo(10, 10)
-  ctx.lineTo(cvs.width - 10, 10);
-  ctx.moveTo(10, 10 + 60)
-  ctx.lineTo(cvs.width - 10, 10 + 60);
-  ctx.stroke();
-
-  ctx.font = '60px Impact';
-  ctx.lineWidth = '5';
-  ctx.lineJoin = 'bevel';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = 'white';
-  ctx.textBaseline = 'top';
-
-  console.log(`'${text} -> ${ctx.measureText(text).width}`)
-
-  ctx.strokeText(text, cvs.width/2, 10);
-  ctx.fillText(text, cvs.width/2, 10);
+  drawCaption(text)(cvs);
 }
 
 getImage('./imminent-ned.jpg')
