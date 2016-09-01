@@ -40,6 +40,12 @@ const dec = num => num - 1;
 
 const flip = fn => (...args) => fn(...args.reverse());
 
+// ––––––––––––– //
+// Boolean Utils //
+// ––––––––––––– //
+
+const not = fn => (...args) => !fn(...args)
+
 const or = (lfn, rfn) => (...args) => lfn(...args) || rfn(...args);
 
 const eq = (l, r) => l === r;
@@ -136,7 +142,7 @@ const pickBy = (obj, fn) => reduce(
 );
 const pick = (obj, keys) => pickBy(obj, (val, key) => keys.includes(key));
 
-const omitBy = (obj, fn) => pickBy(obj, (...args) => !fn(...args));
+const omitBy = (obj, fn) => pickBy(obj, not(fn));
 const omit = (obj, keys) => omitBy(obj, (val, key) => keys.includes(key));
 
 const isEmpty = object => Object.keys(object).length === 0;
