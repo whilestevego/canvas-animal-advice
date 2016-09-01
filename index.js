@@ -65,6 +65,18 @@ const memoize = func => {
   }
 }
 
+// ––––––––––– //
+// Array Utils //
+// ––––––––––– //
+
+const pushInLast = (arr, val) => {
+  if (arr.length <= 0) {
+    arr.push([]);
+    return pushToLast(arr, val);
+  }
+  return arr[arr.length - 1].push(val);
+}
+
 // ––––––––––––– //
 // Boolean Utils //
 // ––––––––––––– //
@@ -157,6 +169,20 @@ const pick = (obj, keys) => pickBy(obj, (val, key) => keys.includes(key));
 const omitBy = (obj, fn) => pickBy(obj, not(fn));
 const omit = (obj, keys) => omitBy(obj, (val, key) => keys.includes(key));
 
+const partitionBy = (obj, fn) => {
+  let prevTest;
+
+  return reduce(obj, (newArr, val, key) => {
+    const currentTest = fn(val);
+    if (currentTest === lastTest) {
+      pushInLast(newArr, val);
+    } else {
+      newArr.push([val]);
+    };
+    prevTest = currentTest;
+    return newArr;
+  }, [])
+}
 
 // –––––––––––––––– //
 // Canvas Utilities //
