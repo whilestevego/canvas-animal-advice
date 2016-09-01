@@ -174,7 +174,7 @@ const partitionBy = (obj, fn) => {
 
   return reduce(obj, (newArr, val, key) => {
     const currentTest = fn(val);
-    if (currentTest === lastTest) {
+    if (currentTest === prevTest) {
       pushInLast(newArr, val);
     } else {
       newArr.push([val]);
@@ -205,25 +205,21 @@ const generateFontSizeRatios = font => {
 const memoGenFontSizeRatios = memoize(generateFontSizeRatios);
 const charWidthRatio = (char, font) => memoGenFontSizeRatios(font).get(char);
 const measureText = (text, font, size) => reduce(text, (total, char) => total + charWidthRatio(char, font) * size, 0)
-const createTextMeasurer = (...args) => text => measureText(text, ...args)
 
-const breakSentenceAt = (sentence, length, font, size) => {
-  if (length.toString() === 'NaN' || typeof length !== 'number') {
+const breakSentenceAt = (sentence, width, fontName, fontSize) => {
+  if (width.toString() === 'NaN' || typeof width !== 'number') {
     throw new TypeError('length must be a number');
   }
 
-  const left = [];
-  const right = sentence.split(' ');
+  let cumulativeLength = 0;
+  const linesOfWords = partitionBy(sentence.split(' '), word => {
+    const length = measureText(`${word} `, fontName, fontSize);
+    cumulativeLength += length;
 
-  const ruler = createTextMeasurer(font, size);
-  const wordsRuler = arr => reduce(arr, (total, word) => ruler(word) + total, 0);
+    return Math.ceil(cumulativeLength / width);
+  });
 
-
-  while (wordsRuler(left + right[0]) < length && right.length > 0) {
-    left.push(right.shift())
-  }
-
-  return [left.join(' '), right.join(' ')]
+  return linesOfWords.map(words => words.join(' '));
 }
 
 // ––––––––––––––––– //
@@ -272,6 +268,7 @@ const defaultCaptionOpts = {
 }
 
 const drawCaption = (text, opts = defaultCaptionOpts) => {
+  const margin = 10;
 
   return cvs => {
     let {fontSize, fontName} = opts;
@@ -280,18 +277,24 @@ const drawCaption = (text, opts = defaultCaptionOpts) => {
     // Consider fontSize a percentage of Canvas height
     fontSize = fontSize / 100 * cvs.height;
     const font = `${fontSize}px ${fontName}`;
+
+    // Set style properties on drawing context
     each(
       Object.assign(omit(opts, ['fontName', 'fontSize']), {font}),
       (val, key) => { ctx[key] = val; }
     );
 
-    let [left, right] = breakSentenceAt(text, cvs.width - 20, fontName, fontSize)
+    const paragraph = breakSentenceAt(
+      text,
+      cvs.width - margin * 2,
+      fontName,
+      fontSize
+    );
 
-    ctx.strokeText(left, cvs.width/2, 10);
-    ctx.fillText(left, cvs.width/2, 10);
-
-    ctx.strokeText(right, cvs.width/2, fontSize + 10);
-    ctx.fillText(right, cvs.width/2, fontSize + 10);
+    each(paragraph, (line, lineNumber) => {
+      ctx.strokeText(line, cvs.width/2, margin + lineNumber * fontSize);
+      ctx.fillText(line, cvs.width/2, margin + lineNumber * fontSize);
+    })
   }
 }
 
