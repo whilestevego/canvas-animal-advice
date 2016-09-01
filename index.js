@@ -188,7 +188,7 @@ const partitionBy = (obj, fn) => {
 // Canvas Utilities //
 // –––––––––––––––– //
 
-const generateFontSizeRatios = font => {
+const fontSizeRatiosFor = memoize(font => {
   const reference = new Map();
   const ctx = h.canvas().getContext('2d');
 
@@ -200,10 +200,9 @@ const generateFontSizeRatios = font => {
   }
 
   return reference;
-}
+});
 
-const memoGenFontSizeRatios = memoize(generateFontSizeRatios);
-const charWidthRatio = (char, font) => memoGenFontSizeRatios(font).get(char);
+const charWidthRatio = (char, font) => fontSizeRatiosFor(font).get(char);
 const measureText = (text, font, size) => reduce(text, (total, char) => total + charWidthRatio(char, font) * size, 0)
 
 const breakSentenceAt = (sentence, width, fontName, fontSize) => {
