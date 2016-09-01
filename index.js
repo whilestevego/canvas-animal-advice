@@ -226,7 +226,7 @@ const getImage = src => {
 
 const defaultCaptionOpts = {
   fontName: 'Impact',
-  fontSize: 60,
+  fontSize: 10,
   lineWidth: 5,
   lineJoin: 'bevel',
   textAlign: 'center',
@@ -235,12 +235,14 @@ const defaultCaptionOpts = {
 }
 
 const drawCaption = (text, opts = defaultCaptionOpts) => {
-  const {fontSize, fontName} = opts;
-  const font = `${fontSize}px ${fontName}`;
 
   return cvs => {
+    let {fontSize, fontName} = opts;
     const ctx = cvs.getContext('2d');
 
+    // Consider fontSize a percentage of Canvas height
+    fontSize = fontSize / 100 * cvs.height;
+    const font = `${fontSize}px ${fontName}`;
     each(
       Object.assign(omit(opts, ['fontName', 'fontSize']), {font}),
       (val, key) => { ctx[key] = val; }
