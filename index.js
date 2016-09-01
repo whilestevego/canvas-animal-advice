@@ -259,8 +259,6 @@ const drawCaption = (text, opts = defaultCaptionOpts) => {
 }
 
 const createWriter = (cvs, img, font = 'Impact', fontSize = 100) => text => {
-  const {naturalHeight, naturalWidth} = img;
-
   ctx = cvs.getContext('2d');
   ctx.clearRect(0, 0, cvs.width, cvs.height);
 
