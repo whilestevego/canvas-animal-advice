@@ -40,74 +40,7 @@ const dec = num => num - 1;
 
 const flip = fn => (...args) => fn(...args.reverse());
 
-// ––––––––––––– //
-// Boolean Utils //
-// ––––––––––––– //
-
-const not = fn => (...args) => !fn(...args)
-
-const or = (lfn, rfn) => (...args) => lfn(...args) || rfn(...args);
-
-const eq = (l, r) => l === r;
-const smaller = (l, r) => l < r;
-const greater = (l, r) => l > r;
-
-const smallerOrEq = or(smaller, eq);
-const greaterOrEq = or(greater, eq);
-
-const range = function* (left, right) {
-  const move = (right - left > 0) ? inc : dec;
-  const comp = (right - left > 0) ? smallerOrEq : greaterOrEq;
-
-  for (let i = left; comp(i, right); i = move(i)) {
-    yield i;
-  }
-}
-
-const take = (gen, n) => {
-  const out = [];
-  
-  for (let i = 0; i < n; i += 1) {
-    const cursor = gen.next();
-
-    if (typeof cursor.value === 'undefined') return out;
-    out.push(cursor.value)
-  }
-
-  return out;
-}
-
-const toGen = function* (obj) {
-  for (let key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      yield [obj[key], key, obj];
-    }
-  }
-}
-
-const each = function (obj, fn) {
-  for (let params of toGen(obj)) {
-    fn(...params);
-  }
-}
-
-const map = (obj, fn) => {
-  const out = [];
-  each(obj, (...args) => { out.push(fn(...args)) });
-
-  return out;
-}
-
-const reduce = (obj, fn, initialVal = null) => {
-  let objGen = toGen(obj);
-  let prevVal = initialVal !== null ? initialVal : objGen.next().value[0];
-
-  for (let [val, key] of objGen) {
-    prevVal = fn(prevVal, val, key, obj);
-  }
-
-  return prevVal;
-}
+const isEmpty = object => Object.keys(object).length === 0;
 
 const keyfy = obj => {
   if (typeof obj === 'string') return obj;
@@ -132,6 +65,85 @@ const memoize = func => {
   }
 }
 
+// ––––––––––––– //
+// Boolean Utils //
+// ––––––––––––– //
+
+const not = fn => (...args) => !fn(...args)
+
+const or = (lfn, rfn) => (...args) => lfn(...args) || rfn(...args);
+
+const eq = (l, r) => l === r;
+const smaller = (l, r) => l < r;
+const greater = (l, r) => l > r;
+
+const smallerOrEq = or(smaller, eq);
+const greaterOrEq = or(greater, eq);
+
+// –––––––––––––– //
+// Sequence Utils //
+// –––––––––––––– //
+
+// Generate //
+
+const toGen = function* (obj) {
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      yield [obj[key], key, obj];
+    }
+  }
+}
+
+const range = function* (left, right) {
+  const move = (right - left > 0) ? inc : dec;
+  const comp = (right - left > 0) ? smallerOrEq : greaterOrEq;
+
+  for (let i = left; comp(i, right); i = move(i)) {
+    yield i;
+  }
+}
+
+const take = (gen, n) => {
+  const out = [];
+  
+  for (let i = 0; i < n; i += 1) {
+    const cursor = gen.next();
+
+    if (typeof cursor.value === 'undefined') return out;
+    out.push(cursor.value)
+  }
+
+  return out;
+}
+
+// Read //
+
+const each = function (obj, fn) {
+  for (let params of toGen(obj)) {
+    fn(...params);
+  }
+}
+
+// Transform //
+
+const map = (obj, fn) => {
+  const out = [];
+  each(obj, (...args) => { out.push(fn(...args)) });
+
+  return out;
+}
+
+const reduce = (obj, fn, initialVal = null) => {
+  let objGen = toGen(obj);
+  let prevVal = initialVal !== null ? initialVal : objGen.next().value[0];
+
+  for (let [val, key] of objGen) {
+    prevVal = fn(prevVal, val, key, obj);
+  }
+
+  return prevVal;
+}
+
 const pickBy = (obj, fn) => reduce(
   obj,
   (newObj, val, key) => {
@@ -145,7 +157,6 @@ const pick = (obj, keys) => pickBy(obj, (val, key) => keys.includes(key));
 const omitBy = (obj, fn) => pickBy(obj, not(fn));
 const omit = (obj, keys) => omitBy(obj, (val, key) => keys.includes(key));
 
-const isEmpty = object => Object.keys(object).length === 0;
 
 // –––––––––––––––– //
 // Canvas Utilities //
