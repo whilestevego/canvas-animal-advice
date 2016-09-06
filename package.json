@@ -4,7 +4,8 @@
   "description": "A tool for generating advice animal memes on the fly with html canvas.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "rollup --config --watch"
   },
   "repository": {
     "type": "git",
@@ -22,5 +23,9 @@
   "bugs": {
     "url": "https://github.com/whilestevego/canvas-animal-advice/issues"
   },
-  "homepage": "https://github.com/whilestevego/canvas-animal-advice#readme"
+  "homepage": "https://github.com/whilestevego/canvas-animal-advice#readme",
+  "devDependencies": {
+    "rollup": "^0.34.13",
+    "rollup-watch": "^2.5.0"
+  }
 }

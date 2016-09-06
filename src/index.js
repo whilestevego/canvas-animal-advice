@@ -8,33 +8,9 @@ const container = document.getElementById('container');
 const π = Math.PI;
 const {floor} = Math;
 
-// ––––––––– //
-// DOM Utils //
-// ––––––––– //
-const findById = id => document.getElementById(id);
-const findByQuery = query => document.querySelector(query);
-
-const setAttributes = (element, attrs) => {
-  for (let name in attrs) {
-    if (attrs.hasOwnProperty(name)) {
-      element.setAttribute(name, attrs[name]);
-    }
-  }
-}
-
-const h = {
-  canvas: (attr = {}) => {
-    const el = document.createElement('canvas');
-    setAttributes(el, attr);
-
-    return el;
-  }
-}
-
 // ––––––––––––– //
 // General Utils //
 // ––––––––––––– //
-
 const inc = num => num + 1;
 const dec = num => num - 1;
 
@@ -68,7 +44,6 @@ const memoize = func => {
 // ––––––––––– //
 // Array Utils //
 // ––––––––––– //
-
 const pushInLast = (arr, val) => {
   if (arr.length <= 0) {
     arr.push([]);
@@ -80,7 +55,6 @@ const pushInLast = (arr, val) => {
 // ––––––––––––– //
 // Boolean Utils //
 // ––––––––––––– //
-
 const not = fn => (...args) => !fn(...args)
 
 const or = (lfn, rfn) => (...args) => lfn(...args) || rfn(...args);
@@ -97,7 +71,6 @@ const greaterOrEq = or(greater, eq);
 // –––––––––––––– //
 
 // Generate //
-
 const toGen = function* (obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
@@ -129,7 +102,6 @@ const take = (gen, n) => {
 }
 
 // Read //
-
 const each = function (obj, fn) {
   for (let params of toGen(obj)) {
     fn(...params);
@@ -137,7 +109,6 @@ const each = function (obj, fn) {
 }
 
 // Transform //
-
 const map = (obj, fn) => {
   const out = [];
   each(obj, (...args) => { out.push(fn(...args)) });
@@ -184,10 +155,52 @@ const partitionBy = (obj, fn) => {
   }, [])
 }
 
+// ––––––––– //
+// DOM Utils //
+// ––––––––– //
+const HTML5Tags = [
+  'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base',
+  'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption',
+  'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn',
+  'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption',
+  'figure', 'footer', 'form', 'h1 to h6', 'head', 'header', 'hr', 'html', 'i',
+  'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li',
+  'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav',
+  'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param',
+  'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section',
+  'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary',
+  'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time',
+  'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'
+]
+
+const findById = id => document.getElementById(id);
+const findByQuery = query => document.querySelector(query);
+
+const setAttributes = (element, attrs) => {
+  for (let name in attrs) {
+    if (attrs.hasOwnProperty(name)) {
+      element.setAttribute(name, attrs[name]);
+    }
+  }
+}
+
+const createTag = (name, attr = {}) => {
+  const el = document.createElement(name);
+  setAttributes(el, attr);
+
+  return el;
+}
+
+const h = {};
+each(
+  HTML5Tags,
+  tag => {
+    h[tag] = attrs => createTag(tag, attrs);
+  }
+);
 // –––––––––––––––– //
 // Canvas Utilities //
 // –––––––––––––––– //
-
 const fontSizeRatiosFor = memoize(font => {
   const reference = new Map();
   const ctx = h.canvas().getContext('2d');
@@ -224,7 +237,6 @@ const breakSentenceAt = (sentence, width, fontName, fontSize) => {
 // ––––––––––––––––– //
 // Application Logic //
 // ––––––––––––––––– //
-
 let getSurface = ({height, width}) => {
   const surface = h.canvas({id: 'surface', height: height * 2, width: width * 2});
   container.appendChild(surface);
@@ -242,8 +254,6 @@ getSurfaceFor = ({naturalHeight, naturalWidth}) => getSurface({
 const getImage = src => {
   return new Promise ((resolve, reject) => {
     const img = new Image();
-    img.src = src;
-
     img.addEventListener('load', () => {
       resolve(img)
     });
@@ -251,11 +261,12 @@ const getImage = src => {
     img.addEventListener('error', error => {
       reject(error)
     });
+
+    img.src = src;
   });
 }
 
 //TODO: Move text drawing bit to a function
-
 const defaultCaptionOpts = {
   fontName: 'Impact',
   fontSize: 10,
@@ -263,11 +274,12 @@ const defaultCaptionOpts = {
   lineJoin: 'bevel',
   textAlign: 'center',
   fillStyle: 'white',
-  textBaseline: 'top'
+  textBaseline: 'bottom'
 }
 
-const drawCaption = (text, opts = defaultCaptionOpts) => {
-  const margin = 10;
+const drawCaption = (text, options) => {
+  const opts = Object.assign({}, defaultCaptionOpts, options);
+  const margin = 30;
 
   return cvs => {
     let {fontSize, fontName} = opts;
@@ -279,7 +291,7 @@ const drawCaption = (text, opts = defaultCaptionOpts) => {
 
     // Set style properties on drawing context
     each(
-      Object.assign(omit(opts, ['fontName', 'fontSize']), {font}),
+      Object.assign(omit(opts, ['fontName', 'fontSize', 'verticalAlign']), {font}),
       (val, key) => { ctx[key] = val; }
     );
 
@@ -291,8 +303,8 @@ const drawCaption = (text, opts = defaultCaptionOpts) => {
     );
 
     each(paragraph, (line, lineNumber) => {
-      ctx.strokeText(line, cvs.width/2, margin + lineNumber * fontSize);
-      ctx.fillText(line, cvs.width/2, margin + lineNumber * fontSize);
+      ctx.strokeText(line, cvs.width/2, cvs.height - margin - (paragraph.length - lineNumber - 1) * fontSize);
+      ctx.fillText(line, cvs.width/2, cvs.height - margin - (paragraph.length - lineNumber - 1) * fontSize);
     })
   }
 }
@@ -306,10 +318,11 @@ const createWriter = (cvs, img, font = 'Impact', fontSize = 100) => text => {
   drawCaption(text)(cvs);
 }
 
+// After image is loaded, initialize program
 getImage('./imminent-ned.jpg')
-  .then(image => {
-    const surface = getSurfaceFor(image)
-    const writer = createWriter(surface, image);
+  .then(img => {
+    const surface = getSurfaceFor(img)
+    const writer = createWriter(surface, img);
 
     container.appendChild(surface);
 
