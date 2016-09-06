@@ -10,7 +10,7 @@ const includePathOptions = {
 export default {
   entry: './src/index.js',
   format: 'cjs',
-  dest: './build/index.js',
+  dest: './public/index.js',
   sourceMap: true,
   plugins: [ includePaths(includePathOptions) ]
 }
