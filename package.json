@@ -1,0 +1,26 @@
+{
+  "name": "canvas-animal-advice",
+  "version": "0.1.0",
+  "description": "A tool for generating advice animal memes on the fly with html canvas.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whilestevego/canvas-animal-advice.git"
+  },
+  "keywords": [
+    "meme",
+    "advice",
+    "animal",
+    "es6",
+    "rollup"
+  ],
+  "author": "Steve Godin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/whilestevego/canvas-animal-advice/issues"
+  },
+  "homepage": "https://github.com/whilestevego/canvas-animal-advice#readme"
+}
