@@ -1,203 +1,10 @@
+import {h} from 'dom';
+import {memoize} from 'base';
+import {each, omit, partitionBy, range, reduce} from 'sequence';
+
 const prompt = document.getElementById('prompt');
 const container = document.getElementById('container');
 
-// ––––––– //
-// Aliases //
-// ––––––– //
-
-const π = Math.PI;
-const {floor} = Math;
-
-// ––––––––––––– //
-// General Utils //
-// ––––––––––––– //
-const inc = num => num + 1;
-const dec = num => num - 1;
-
-const flip = fn => (...args) => fn(...args.reverse());
-
-const isEmpty = object => Object.keys(object).length === 0;
-
-const keyfy = obj => {
-  if (typeof obj === 'string') return obj;
-
-  return map(obj, (val, key) => `${key}:${val}`).sort().join(',');
-}
-
-// TODO: Support multiple arguments
-const memoize = func => {
-  if (!(window._memos instanceof Map)) {
-    window._memos = new Map();
-  }
-
-  return arg => {
-    const key = `${func.name}#${keyfy(arg)}`;
-    if (window._memos.has(key)) {
-      return window._memos.get(key);
-    }
-
-    window._memos.set(key, func(arg));
-    return window._memos.get(key);
-  }
-}
-
-// ––––––––––– //
-// Array Utils //
-// ––––––––––– //
-const pushInLast = (arr, val) => {
-  if (arr.length <= 0) {
-    arr.push([]);
-    return pushToLast(arr, val);
-  }
-  return arr[arr.length - 1].push(val);
-}
-
-// ––––––––––––– //
-// Boolean Utils //
-// ––––––––––––– //
-const not = fn => (...args) => !fn(...args)
-
-const or = (lfn, rfn) => (...args) => lfn(...args) || rfn(...args);
-
-const eq = (l, r) => l === r;
-const smaller = (l, r) => l < r;
-const greater = (l, r) => l > r;
-
-const smallerOrEq = or(smaller, eq);
-const greaterOrEq = or(greater, eq);
-
-// –––––––––––––– //
-// Sequence Utils //
-// –––––––––––––– //
-
-// Generate //
-const toGen = function* (obj) {
-  for (let key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      yield [obj[key], key, obj];
-    }
-  }
-}
-
-const range = function* (left, right) {
-  const move = (right - left > 0) ? inc : dec;
-  const comp = (right - left > 0) ? smallerOrEq : greaterOrEq;
-
-  for (let i = left; comp(i, right); i = move(i)) {
-    yield i;
-  }
-}
-
-const take = (gen, n) => {
-  const out = [];
-  
-  for (let i = 0; i < n; i += 1) {
-    const cursor = gen.next();
-
-    if (typeof cursor.value === 'undefined') return out;
-    out.push(cursor.value)
-  }
-
-  return out;
-}
-
-// Read //
-const each = function (obj, fn) {
-  for (let params of toGen(obj)) {
-    fn(...params);
-  }
-}
-
-// Transform //
-const map = (obj, fn) => {
-  const out = [];
-  each(obj, (...args) => { out.push(fn(...args)) });
-
-  return out;
-}
-
-const reduce = (obj, fn, initialVal = null) => {
-  let objGen = toGen(obj);
-  let prevVal = initialVal !== null ? initialVal : objGen.next().value[0];
-
-  for (let [val, key] of objGen) {
-    prevVal = fn(prevVal, val, key, obj);
-  }
-
-  return prevVal;
-}
-
-const pickBy = (obj, fn) => reduce(
-  obj,
-  (newObj, val, key) => {
-    if (fn(val, key) === true) newObj[key] = val;
-    return newObj;
-  },
-  {}
-);
-const pick = (obj, keys) => pickBy(obj, (val, key) => keys.includes(key));
-
-const omitBy = (obj, fn) => pickBy(obj, not(fn));
-const omit = (obj, keys) => omitBy(obj, (val, key) => keys.includes(key));
-
-const partitionBy = (obj, fn) => {
-  let prevTest;
-
-  return reduce(obj, (newArr, val, key) => {
-    const currentTest = fn(val);
-    if (currentTest === prevTest) {
-      pushInLast(newArr, val);
-    } else {
-      newArr.push([val]);
-    };
-    prevTest = currentTest;
-    return newArr;
-  }, [])
-}
-
-// ––––––––– //
-// DOM Utils //
-// ––––––––– //
-const HTML5Tags = [
-  'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base',
-  'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption',
-  'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn',
-  'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption',
-  'figure', 'footer', 'form', 'h1 to h6', 'head', 'header', 'hr', 'html', 'i',
-  'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li',
-  'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav',
-  'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param',
-  'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section',
-  'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary',
-  'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time',
-  'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'
-]
-
-const findById = id => document.getElementById(id);
-const findByQuery = query => document.querySelector(query);
-
-const setAttributes = (element, attrs) => {
-  for (let name in attrs) {
-    if (attrs.hasOwnProperty(name)) {
-      element.setAttribute(name, attrs[name]);
-    }
-  }
-}
-
-const createTag = (name, attr = {}) => {
-  const el = document.createElement(name);
-  setAttributes(el, attr);
-
-  return el;
-}
-
-const h = {};
-each(
-  HTML5Tags,
-  tag => {
-    h[tag] = attrs => createTag(tag, attrs);
-  }
-);
 // –––––––––––––––– //
 // Canvas Utilities //
 // –––––––––––––––– //
@@ -246,7 +53,7 @@ let getSurface = ({height, width}) => {
 
 getSurface = memoize(getSurface);
 
-getSurfaceFor = ({naturalHeight, naturalWidth}) => getSurface({
+const getSurfaceFor = ({naturalHeight, naturalWidth}) => getSurface({
   height: naturalHeight,
   width: naturalWidth
 })
@@ -310,7 +117,7 @@ const drawCaption = (text, options) => {
 }
 
 const createWriter = (cvs, img, font = 'Impact', fontSize = 100) => text => {
-  ctx = cvs.getContext('2d');
+  const ctx = cvs.getContext('2d');
   ctx.clearRect(0, 0, cvs.width, cvs.height);
 
   if (img) ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
