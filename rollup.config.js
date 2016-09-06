@@ -2,7 +2,7 @@ import includePaths from 'rollup-plugin-includepaths';
 
 const includePathOptions = {
     include: {},
-    paths: ['src/utils'],
+    paths: ['src/'],
     external: [],
     extensions: ['.js', '.json', '.html']
 };
