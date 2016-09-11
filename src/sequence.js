@@ -1,5 +1,6 @@
 import {inc, dec} from 'base';
 import {smallerOrEq, greaterOrEq, not} from 'boolean';
+import {pushInLast} from 'utils';
 
 // –––––––––––––––––– //
 // Sequence functions //

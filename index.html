@@ -8,11 +8,23 @@
   </head>
 
   <body>
-    <form>
-      <input id="prompt" placeholder="Fill me in..."/>
-    </form>
+    <nav>
+      <a href="#advice-animal">Advice Animal</a>
+      <a href="#shapes">Shapes</a>
+    </nav>
 
-    <div id="container"></div>
+    <main>
+      <section id="advice-animal">
+        <form>
+          <input id="prompt" placeholder="Fill me in..."/>
+        </form>
+        <div class="canvas-box"></div>
+      </section>
+
+      <section id="shapes">
+        <canvas></canvas>
+      </section>
+    </main>
 
     <script src="public/index.js"></script>
   </body>
