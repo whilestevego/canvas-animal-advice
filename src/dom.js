@@ -18,8 +18,27 @@ export const HTML5Tags = [
   'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'
 ]
 
-export const findById = id => document.getElementById(id);
-export const findByQuery = query => document.querySelector(query);
+//TODO: Write high-order function to abstract pattern below:
+export const findById = (idOrNode, id) => {
+  if (typeof idOrNode.getElementById !== 'function') {
+    return findById(document, idOrNode);
+  }
+  return idOrNode.getElementById(id);
+}
+
+export const findAllBySelector = (selectorOrNode, selector) => {
+  if (typeof selectorOrNode.querySelectorAll !== 'function') {
+    return findAllBySelector(document, selectorOrNode);
+  }
+  return selectorOrNode.querySelectorAll(selector);
+}
+
+export const findBySelector = (selectorOrNode, selector) => {
+  if (typeof selectorOrNode.querySelector !== 'function') {
+    return findBySelector(document, selectorOrNode);
+  }
+  return selectorOrNode.querySelector(selector);
+}
 
 export const setAttributes = (element, attrs) => {
   for (let name in attrs) {
