@@ -1,5 +1,11 @@
+@font-face {
+  font-family: 'StillTime';
+  src: url('../fonts/StillTime.ttf');
+}
+
 body {
   margin: 0;
+  background-color: MidnightBlue;
 }
 
 nav {
@@ -8,7 +14,25 @@ nav {
   left: 0;
   width: 100vw;
   padding: 0.5em 10vw 0.5em 10vw;
-  background-color: HotPink;
+  background-color: DeepPink;
+}
+
+nav > a {
+  color: White;
+  letter-spacing: 0.075em;
+  font-family: 'StillTime';
+  font-size: 2em;
+  text-decoration: none;
+
+  transition: color 0.25s ease-in-out;
+}
+
+nav > a:not(:first-child) {
+  margin-left: 1em;
+}
+
+nav > a:hover {
+  color: MidnightBlue;
 }
 
 main {
