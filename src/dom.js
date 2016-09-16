@@ -48,9 +48,9 @@ export const setAttributes = (element, attrs) => {
   }
 }
 
-export const createTag = (name, attr = {}) => {
+export const createTag = (name, attrs = {}) => {
   const el = document.createElement(name);
-  setAttributes(el, attr);
+  setAttributes(el, attrs);
 
   return el;
 }
