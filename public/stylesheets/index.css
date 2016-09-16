@@ -38,8 +38,9 @@ nav > a {
   font-family: 'StillTime';
   font-size: 2em;
   text-decoration: none;
+  text-shadow: 0 0 0.05em White;
 
-  transition: color 0.25s ease-in-out;
+  transition: text-shadow 0.25s ease-in-out;
 }
 
 nav > a:not(:first-child) {
@@ -47,7 +48,7 @@ nav > a:not(:first-child) {
 }
 
 nav > a:hover {
-  color: MidnightBlue;
+  text-shadow: 0 0 0.75em White;
 }
 
 main {
