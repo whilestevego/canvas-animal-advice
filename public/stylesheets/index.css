@@ -17,6 +17,21 @@ nav {
   background-color: DeepPink;
 }
 
+/* Add fading border at bottom */
+nav:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.3em);
+  right: 0;
+  z-index: -1;
+
+  box-sizing: content-box;
+  border-top: solid 0.25em DeepPink;
+  height: 0.25em;
+  border-bottom: solid 0.15em DeepPink;
+}
+
 nav > a {
   color: White;
   letter-spacing: 0.075em;
@@ -36,7 +51,7 @@ nav > a:hover {
 }
 
 main {
-  padding: calc(2 * 1em + 2em) 10vw 0 10vw;
+  padding: calc(2 * 1em + 2em + 0.3em + 0.25em + 0.25em + 0.15em) 10vw 0 10vw;
   width: calc(100vw - 20vw);
 }
 
