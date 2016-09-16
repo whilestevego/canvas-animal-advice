@@ -1,4 +1,5 @@
 import 'advice-animal';
+import 'shape';
 import {findById, findBySelector, findAllBySelector} from 'dom';
 import {each} from 'sequence';
 
