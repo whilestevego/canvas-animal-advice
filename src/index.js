@@ -1,32 +1,28 @@
 import 'advice-animal';
-import {findById, findAllBySelector} from 'dom';
+import {findById, findBySelector, findAllBySelector} from 'dom';
 import {each} from 'sequence';
 
-// each(
-//   findAllBySelector('nav > a'),
-//   a => {
-//     a.addEventListener('click', e => {e.preventDefault()});
-//   }
-// );
-const extractHash = url => url.match(/#(.+)$/)[1];
-
-const toggleIn = (targetId, containerSelector) => {
-  each(findAllBySelector(`${containerSelector} > *`), node => {
-    console.log(node.styles);
-  });
-};
+const extractHash = url => {
+  const HASH_REGEX = /#(.+)$/;
+  const match = url.match(HASH_REGEX);
+  return match ? match[1] : null;
+}
 
 window.addEventListener('load', () => {
-  const shownNode = findById(extractHash(window.location.hash));
-  shownNode.style.display = 'initial';
+  if (window.location.hash !== '') {
+    const shownNode = findById(extractHash(window.location.hash));
+    shownNode.style.display = 'initial';
+  } else {
+    window.location.hash = findBySelector('nav > a').getAttribute('href');
+  }
 })
 
 window.addEventListener('hashchange', ({oldURL, newURL}) => {
   const {location} = event.target;
-  const oldSection = findById(extractHash(oldURL));
-  const newSection = findById(extractHash(newURL));
+  const oldSection = findById(extractHash(oldURL) || '');
+  const newSection = findById(extractHash(newURL) || '');
 
-  oldSection.style.display = 'none';
-  newSection.style.display = 'initial';
+  oldSection && (oldSection.style.display = 'none');
+  newSection && (newSection.style.display = 'initial');
 });
 
