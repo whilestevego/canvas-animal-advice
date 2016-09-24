@@ -12,7 +12,7 @@ const extractHash = url => {
 window.addEventListener('load', () => {
   if (window.location.hash !== '') {
     const shownNode = findById(extractHash(window.location.hash));
-    shownNode.style.display = 'initial';
+    shownNode.style.display = 'flex';
   } else {
     window.location.hash = findBySelector('nav > a').getAttribute('href');
   }
@@ -24,6 +24,6 @@ window.addEventListener('hashchange', ({oldURL, newURL}) => {
   const newSection = findById(extractHash(newURL) || '');
 
   oldSection && (oldSection.style.display = 'none');
-  newSection && (newSection.style.display = 'initial');
+  newSection && (newSection.style.display = 'flex');
 });
 

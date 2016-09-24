@@ -58,8 +58,29 @@ main {
 
 main > section {
   display: none;
+  flex-flow: column;
 }
 
+main > section > *:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.caption-form {
+  display:flex;
+  flex-flow: column;
+}
+
+.caption-form > input:not(:last-child) {
+  margin-bottom: 0.5rem;
+}
+
+.caption-form > input {
+  font-size: 1.2rem;
+  font-weight: 100;
+  font-family: Helvetica;
+  border: none;
+  border-radius: 0.1rem;
+}
 canvas {
   width: 100%;
 }
