@@ -1,8 +1,5 @@
 'use strict';
 
-const inc = num => num + 1;
-const dec = num => num - 1;
-
 const keyfy = obj => {
   if (typeof obj === 'string') return obj;
 
@@ -29,14 +26,7 @@ const memoize = fn => {
 // ––––––––––––– //
 // Boolean Utils //
 // ––––––––––––– //
-const eq = (l, r) => l === r;
-const greater = (l, r) => l > r;
 const not = fn => (...args) => !fn(...args)
-const or = (lfn, rfn) => (...args) => lfn(...args) || rfn(...args);
-const smaller = (l, r) => l < r;
-
-const greaterOrEq = or(greater, eq);
-const smallerOrEq = or(smaller, eq);
 
 // ––––––––––– //
 // Array Utils //
@@ -54,15 +44,6 @@ const toIterator = function* (obj) {
     if (obj.hasOwnProperty(key)) {
       yield [obj[key], key, obj];
     }
-  }
-}
-
-const range = function* (left, right) {
-  const direct = (right - left > 0) ? inc : dec;
-  const compare = (right - left > 0) ? smallerOrEq : greaterOrEq;
-
-  for (let i = left; compare(i, right); i = direct(i)) {
-    yield i;
   }
 }
 
@@ -170,41 +151,37 @@ each(
   }
 );
 
-const prompt = findById('prompt');
+const topCaption = findById('top-caption');
+const bottomCaption = findById('bottom-caption');
+const captionForm = findBySelector('.caption-form');
 const container = findBySelector('#advice-animal > .canvas-box');
 
-// –––––––––––––––– //
-// Canvas Utilities //
-// –––––––––––––––– //
-const fontSizeRatiosFor = memoize(font => {
-  const reference = new Map();
+// ––––––––––––––––––––– //
+// Canvas Text Utilities //
+// ––––––––––––––––––––– //
+
+const rulerFor = (fontName, fontSize) => text => {
   const ctx = h.canvas().getContext('2d');
 
-  ctx.font = `1px ${font}`
+  ctx.font = `${fontSize}px ${fontName}`;
+  return ctx.measureText(text).width;
+}
 
-  for (let code of range(0,126)) {
-    const char = String.fromCharCode(code);
-    reference.set(char, ctx.measureText(char).width);
-  }
-
-  return reference;
-});
-
-const charWidthRatio = (char, font) => fontSizeRatiosFor(font).get(char);
-const measureText = (text, font, size) => reduce(text, (total, char) => total + charWidthRatio(char, font) * size, 0)
-
-const breakSentenceAt = (sentence, width, fontName, fontSize) => {
+const splitIntoLines = (text, width, fontName, fontSize) => {
   if (width.toString() === 'NaN' || typeof width !== 'number') {
-    throw new TypeError('length must be a number');
+    throw new TypeError('width must be a number');
   }
+  const measure = rulerFor(fontName, fontSize);
+  const spaceLength = measure(' ');
 
   let cumulativeLength = 0;
-  const linesOfWords = partitionBy(sentence.split(' '), word => {
-    const length = measureText(`${word} `, fontName, fontSize);
-    cumulativeLength += length;
-
-    return Math.ceil(cumulativeLength / width);
-  });
+  const linesOfWords = partitionBy(text.split(' '),
+    word => {
+      console.log(cumulativeLength)
+      cumulativeLength += measure(word) + spaceLength;
+      return Math.ceil((cumulativeLength - spaceLength) / width);
+    }
+  );
 
   return linesOfWords.map(words => words.join(' '));
 }
@@ -212,14 +189,14 @@ const breakSentenceAt = (sentence, width, fontName, fontSize) => {
 // ––––––––––––––––– //
 // Application Logic //
 // ––––––––––––––––– //
-let getSurface = ({height, width}) => {
-  const surface = h.canvas({id: 'surface', height: height * 2, width: width * 2});
-  container.appendChild(surface);
+const getSurface = memoize(
+  ({height, width}) => {
+    const surface = h.canvas({id: 'surface', height: height * 2, width: width * 2});
+    container.appendChild(surface);
 
-  return surface;
-}
-
-getSurface = memoize(getSurface);
+    return surface;
+  }
+)
 
 const getSurfaceFor = ({naturalHeight, naturalWidth}) => getSurface({
   height: naturalHeight,
@@ -245,6 +222,7 @@ const getImage = src => {
 const defaultCaptionOpts = {
   fontName: 'Impact',
   fontSize: 10,
+  margin: 30,
   lineWidth: 5,
   lineJoin: 'bevel',
   textAlign: 'center',
@@ -252,35 +230,36 @@ const defaultCaptionOpts = {
   textBaseline: 'bottom'
 }
 
-const drawCaption = (text, options) => {
+function caption (text, options) {
   const opts = Object.assign({}, defaultCaptionOpts, options);
-  const margin = 30;
 
-  return cvs => {
-    let {fontSize, fontName} = opts;
-    const ctx = cvs.getContext('2d');
+  return {
+    draw(cvs) {
+      const {height, width} = cvs;
+      const {fontSize, fontName, margin} = opts;
+      const ctx = cvs.getContext('2d');
 
-    // Consider fontSize a percentage of Canvas height
-    fontSize = fontSize / 100 * cvs.height;
-    const font = `${fontSize}px ${fontName}`;
+      // Consider fontSize a percentage of Canvas height
+      const fontSizeInPX = fontSize / 100 * height;
+      const font = `${fontSizeInPX}px ${fontName}`;
 
-    // Set style properties on drawing context
-    each(
-      Object.assign(omit(opts, ['fontName', 'fontSize', 'verticalAlign']), {font}),
-      (val, key) => { ctx[key] = val; }
-    );
+      // Set style properties on drawing context
+      Object.assign(ctx, omit(opts, ['margin','fontName', 'fontSize']), {font});
 
-    const paragraph = breakSentenceAt(
-      text,
-      cvs.width - margin * 2,
-      fontName,
-      fontSize
-    );
+      const lines = splitIntoLines(text, width - margin * 2, fontName, fontSizeInPX);
+      const lineCount = lines.length;
 
-    each(paragraph, (line, lineNumber) => {
-      ctx.strokeText(line, cvs.width/2, cvs.height - margin - (paragraph.length - lineNumber - 1) * fontSize);
-      ctx.fillText(line, cvs.width/2, cvs.height - margin - (paragraph.length - lineNumber - 1) * fontSize);
-    })
+      const verticalLinePos = {
+        top: lineNumber => margin + lineNumber * fontSizeInPX,
+        middle: lineNumber => (height - lineCount * fontSizeInPX)/2 + lineNumber * fontSizeInPX + fontSizeInPX/2,
+        bottom: lineNumber => height - margin - (lineCount - lineNumber - 1) * fontSizeInPX,
+      }
+
+      each(lines, (line, lineNumber) => {
+        ctx.strokeText(line, cvs.width/2, verticalLinePos[opts.textBaseline](lineNumber));
+        ctx.fillText(line, cvs.width/2, verticalLinePos[opts.textBaseline](lineNumber));
+      });
+    }
   }
 }
 
@@ -290,7 +269,8 @@ const createWriter = (cvs, img, font = 'Impact', fontSize = 100) => text => {
 
   if (img) ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
 
-  drawCaption(text)(cvs);
+  caption(text.top, {textBaseline: 'top'}).draw(cvs);
+  caption(text.bottom, {textBaseline: 'bottom'}).draw(cvs);
 }
 
 // After image is loaded, initialize program
@@ -301,8 +281,12 @@ getImage('./imminent-ned.jpg')
 
     container.appendChild(surface);
 
-    prompt.addEventListener('input', ({target}) => {
-      window.requestAnimationFrame(() => {writer(target.value)});
+    captionForm.addEventListener('input', (event) => {
+      const text = {
+        top: topCaption.value || '',
+        bottom: bottomCaption.value || '',
+      }
+      window.requestAnimationFrame(() => {writer(text)});
     });
 
     writer('');
@@ -314,25 +298,52 @@ getImage('./imminent-ned.jpg')
   const canvas = h.canvas({height: 2000, width: 1000});
   container.appendChild(canvas);
 
+  // On macOS, press CMD+P for π
   const π = Math.PI;
 
-  const Artist = cvs => {
-    const ctx = cvs.getContext('2d');
+  const circle = (ctx, {cx = 0, cy = 0, radius = 1}) => {
+    const path = new Path2D();
 
-    const circle = ({cx = 0, cy = 0, r = 1}) => {
-      const path = new Path2D();
+    path.arc(cx, cy, radius, 0, 2*π, true);
 
-      path.moveTo(cx, cy);
-      path.arc(cx, cy, r, 0, 2*π, true);
-
-      ctx.fillStyle = 'white';
-      ctx.fill(path);
-    }
-
-    return {circle};
+    ctx.fill(path);
   };
 
-  Artist(canvas).circle({cx: 100, cy: 100, r: 60});
+  const rectangle = (ctx, {cx = 0, cy = 0, width = 2, height = 1}) => {
+    const path = new Path2D();
+
+    path.rect(cx, cy, width, height);
+
+    ctx.fill(path);
+  };
+
+  const square = (ctx, {cx = 0, cy = 0, width = 1}) => {
+    rectangle(ctx, {cx, cy, width, height: width});
+  };
+
+  function Artist (cvs) {
+    const ctx = cvs.getContext('2d');
+    const fns = [circle, square, rectangle];
+
+    ctx.fillStyle = 'White';
+
+    each(
+      fns,
+      fn => {
+        this[fn.name] = arg => {
+          arg ? fn(ctx, arg) : fn(ctx, {});
+          return this;
+        };
+      }
+    );
+  };
+
+  const artist = new Artist(canvas);
+
+  artist
+    .circle({cx: 100, cy: 100, radius: 60})
+    .circle({cx: 200, cy: 300, radius: 80})
+    .square({cx: 400, cy: 200, width: 60 * 3});
 };
 
 const extractHash = url => {
@@ -344,7 +355,7 @@ const extractHash = url => {
 window.addEventListener('load', () => {
   if (window.location.hash !== '') {
     const shownNode = findById(extractHash(window.location.hash));
-    shownNode.style.display = 'initial';
+    shownNode.style.display = 'flex';
   } else {
     window.location.hash = findBySelector('nav > a').getAttribute('href');
   }
@@ -356,6 +367,6 @@ window.addEventListener('hashchange', ({oldURL, newURL}) => {
   const newSection = findById(extractHash(newURL) || '');
 
   oldSection && (oldSection.style.display = 'none');
-  newSection && (newSection.style.display = 'initial');
+  newSection && (newSection.style.display = 'flex');
 });
 //# sourceMappingURL=index.js.map
